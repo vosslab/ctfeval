@@ -32,7 +32,7 @@ class CtfDisplay(object):
 	def __init__(self):
 		### global params that do NOT change with image
 		self.ringwidth = 1.0
-		self.debug = False
+		self.debug = True
 		return
 
 	#====================
@@ -882,10 +882,37 @@ class CtfDisplay(object):
 			pass
 		return
 
+	#=====================
+	def printCtfData(self, ctfvalue):
+		if ctfvalue is None:
+			return
+		defocusratio = ctfvalue['defocus2']/ctfvalue['defocus1']
+		if 'acerun' in ctfvalue:
+			method = getCtfMethod(ctfvalue)
+			runname = ctfvalue['acerun']['name']
+			sys.stderr.write("[%s]   method: %s | runname %s\n"%
+			(apDisplay.colorString("CTF run", "blue"), method, runname))
+		sys.stderr.write("[%s] def1: %.2e | def2: %.2e | angle: %.1f | ampcontr %.2f | defratio %.3f\n"%
+			(apDisplay.colorString("CTF param", "blue"), ctfvalue['defocus1'], 
+			ctfvalue['defocus2'], ctfvalue['angle_astigmatism'], 
+			ctfvalue['amplitude_contrast'], defocusratio))
+		if 'resolution_80_percent' in ctfvalue.keys() and ctfvalue['resolution_80_percent'] is not None:
+			sys.stderr.write("[%s] conf_30-10: %s | conf_5peak: %s | res_0.8: %.1fA | res_0.5 %.1fA\n"%
+				(apDisplay.colorString("CTF stats", "blue"), 
+				apDisplay.colorProb(ctfvalue['confidence_30_10']), 
+				apDisplay.colorProb(ctfvalue['confidence_5_peak']),
+				ctfvalue['resolution_80_percent'], ctfvalue['resolution_50_percent']))
+		#sys.stderr.write("[%s] conf: %s | conf_d: %s\n"%
+		#	(apDisplay.colorString("CTF stats", "blue"), apDisplay.colorProb(ctfvalue['confidence']), 
+		#	apDisplay.colorProb(ctfvalue['confidence_d'])))
+		#apDisplay.colorProb(numlist[i])
+		#time.sleep(3)
+		return
+
 	#====================
 	#====================
 	def convertDefociToConvention(self, ctfdata):
-		ctfdb.printCtfData(ctfdata)
+		self.printCtfData(ctfdata)
 		initdefocusratio = ctfdata['defocus2']/ctfdata['defocus1']
 
 		# program specific corrections?
@@ -952,11 +979,12 @@ class CtfDisplay(object):
 
 		### get peak of CTF
 		self.cs = ctfdata['cs']*1e-3
-		self.volts = imgdata['scope']['high tension']
+		self.volts = ctfdata['volts']
+		
 		self.ampcontrast = ctfdata['amplitude_contrast']
 
 		### process power spectra
-		self.apix = apDatabase.getPixelSize(imgdata)
+		self.apix = ctfdata['apix']
 
 		if self.debug is True:
 			print "Pixelsize (A/pix)", self.apix
@@ -1115,6 +1143,9 @@ if __name__ == "__main__":
 #====================
 def makeCtfImages(imgdata, ctfdata, fftpath=None, fftfreq=None, twod=True):
 	a = CtfDisplay()
+	apix = apDatabase.getPixelSize(imgdata)
+	ctfdata['apix'] = apix
+	ctfdata['volts'] = imgdata['scope']['high tension']
 	ctfdisplaydict = a.CTFpowerspec(imgdata, ctfdata, fftpath, fftfreq, twod=twod)
 	return ctfdisplaydict
 

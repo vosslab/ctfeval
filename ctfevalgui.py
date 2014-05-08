@@ -9,7 +9,8 @@ import wx
 import numpy
 from PIL import Image
 from pyami import mrc
-from pyami.Entry import FloatEntry, IntEntry, EVT_ENTRY
+from pyami.Entry import FloatEntry
+from appionlib.apCtf import ctfdisplay
 
 # begin wxGlade: dependencies
 # end wxGlade
@@ -30,11 +31,13 @@ imagetypefilter = (
 	)
 
 class MyFrame(wx.Frame):
+	#--------------------
 	def __init__(self, *args, **kwds):
 		# begin wxGlade: MyFrame.__init__
+		self.fullimagepath = None
 		kwds["style"] = wx.DEFAULT_FRAME_STYLE
 		wx.Frame.__init__(self, *args, **kwds)
-		self.Logo = wx.StaticBitmap(self, wx.ID_ANY, wx.Bitmap("/extra/Movies/ctfeval/ctfeval_logo.png", wx.BITMAP_TYPE_ANY))
+		self.Logo = wx.StaticBitmap(self, wx.ID_ANY, wx.Bitmap("images/ctfeval_logo.png", wx.BITMAP_TYPE_ANY))
 		self.static_line_1a = wx.StaticLine(self, wx.ID_ANY)
 		self.static_line_1b = wx.StaticLine(self, wx.ID_ANY)
 		self.openFileButton = wx.Button(self, wx.ID_ANY, "Select Micrograph...")
@@ -67,12 +70,14 @@ class MyFrame(wx.Frame):
 		self.Bind(wx.EVT_BUTTON, self.quit, self.quitButton)
 		# end wxGlade
 
+	#--------------------
 	def __set_properties(self):
 		# begin wxGlade: MyFrame.__set_properties
 		self.SetTitle("MyFrame")
 		self.processButton.SetFont(wx.Font(16, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, "Cantarell"))
 		# end wxGlade
 
+	#--------------------
 	def __do_layout(self):
 		# begin wxGlade: MyFrame.__do_layout
 		MainSizer = wx.FlexGridSizer(2, 3, 10, 10)
@@ -121,6 +126,7 @@ class MyFrame(wx.Frame):
 		self.Layout()
 		# end wxGlade
 
+	#--------------------
 	def selectMicrograph(self, event):  # wxGlade: MyFrame.<event_handler>
 		dlg = wx.FileDialog(self, "Choose a micrograph to open", os.getcwd(), "",
 			imagetypefilter, wx.OPEN)
@@ -128,16 +134,17 @@ class MyFrame(wx.Frame):
 		if dlg.ShowModal() == wx.ID_OK:
 			self.data['outfile'] = dlg.GetFilename()
 			self.data['dirname']  = os.path.abspath(dlg.GetDirectory())
-			fullpath = os.path.join(self.data['dirname'], self.data['outfile'])
+			self.fullimagepath = os.path.join(self.data['dirname'], self.data['outfile'])
 			if (dlg.GetFilterIndex() == 0):
-				self.processMrc(fullpath)
+				self.processMrc(self.fullimagepath)
 				self.imageLabel.SetLabel(dlg.GetFilename())
-				self.statbar.PushStatusText(fullpath, 0)
-			#self.readData()
+				self.statbar.PushStatusText(self.fullimagepath, 0)
+			
 			self.processButton.SetBackgroundColour(wx.Colour(255, 198, 191))
 		dlg.Destroy()
 		event.Skip()
 
+	#--------------------
 	def processMrc(self, mrcfile):  # wxGlade: MyFrame.<event_handler>
 		if not os.path.isfile(mrcfile):
 			print "ERROR: could not read file %s"%(mrcfile)
@@ -161,10 +168,8 @@ class MyFrame(wx.Frame):
 		else:
 			self.bitmap = None
 			return False
-
 		if wximage is None:
 			return False
-
 		xscale = 384./wximage.GetWidth()
 		yscale = 384./wximage.GetHeight()
 		scale = max(xscale,yscale)
@@ -189,11 +194,104 @@ class MyFrame(wx.Frame):
 		wximage.SetData(imagedata.convert('RGB').tostring())
 		return wximage
 
-
+	#--------------------
 	def processCTF(self, event):  # wxGlade: MyFrame.<event_handler>
+		if self.checkCTFvalues() is False:
+			event.Skip()
+			return
 		print "Event handler 'processCTF' not implemented!"
-		event.Skip()
 
+		imgdata = {
+			'filename': self.fullimagepath,
+			'image': mrc.read(self.fullimagepath),
+		}
+		ctfdata = {
+			'volts': self.voltValue.GetValue()*1e3,
+			'cs': self.csValue.GetValue(),
+			'apix': self.pixelSizeValue.GetValue(),
+			'defocus1': self.defoc1Value.GetValue()*1e-6,
+			'defocus2': self.defoc2Value.GetValue()*1e-6,
+			'angle_astigmatism': self.angleValue.GetValue(),
+			'amplitude_contrast': self.ampConValue.GetValue(),
+		}
+		a = ctfdisplay.CtfDisplay()
+		ctfdisplaydict = a.CTFpowerspec(imgdata, ctfdata, None, None, True)
+		event.Skip()
+		#return ctfdisplaydict
+
+	#--------------------
+	def popupError(self, msg):
+		self.statbar.PushStatusText("ERROR: %s"%(msg), 0)
+		dialog = wx.MessageDialog(self, "%s"%(msg),
+			'Error', wx.OK|wx.ICON_ERROR)
+		dialog.ShowModal()
+		dialog.Destroy()
+
+	#--------------------
+	def checkCTFvalues(self):
+		if self.fullimagepath is None:
+			self.popupError("Please select a micrograph for processing")
+			return False	
+	
+		volts = self.voltValue.GetValue()
+		if volts is None:
+			self.popupError("Please enter a voltage value")
+			return False
+		if volts > 400.0 or volts < 60:
+			self.popupError("atypical high tension value %.1f kiloVolts"%(volts))	
+			return False
+		
+		cs = self.csValue.GetValue()
+		if cs is None:
+			self.popupError("Please enter a spherical abberation value")
+			return False
+		if cs > 7.0 or cs < 0.4:
+			self.popupError("atypical C_s value %.1f mm"%(cs))
+			return False
+
+		pixelsize = self.pixelSizeValue.GetValue()
+		if pixelsize is None:
+			self.popupError("Please enter a pixel size value")
+			return False		
+		if pixelsize > 20.0 or pixelsize < 0.1:
+			self.popupError("atypical pixel size value %.1f Angstroms"%(pixelsize))
+			return False
+		
+		focus1 = self.defoc1Value.GetValue()
+		if focus1 is None:
+			self.popupError("Please enter a defocus 1 value")
+			return False
+		if focus1 > 15.0 or focus1 < 0.1:
+			self.popupError("atypical defocus #1 value %.1f microns (underfocus is positve)"%(focus1))
+			return False
+			
+		focus2 = self.defoc2Value.GetValue()
+		if focus2 is None:
+			self.popupError("Please enter a defocus 2 value")
+			return False
+		if focus2 > 15.0 or focus2 < 0.1:
+			self.popupError("atypical defocus #2 value %.1f microns (underfocus is positve)"%(focus1))
+			return False			
+
+		angle = self.angleValue.GetValue()
+		if angle is None:
+			self.popupError("Please enter a angle astigmatism value, zero for no astig")
+			return False
+		if abs(angle) > 0.01 and abs(angle) < 3.0:
+			self.popupError("atypical angle astigmatism value %.3f"%(angle))
+			return False
+			
+		ampcon = self.ampConValue.GetValue()
+		if ampcon is None:
+			self.popupError("Please enter a amplitude contrast value")
+			return False
+		if ampcon < 0.0 or ampcon > 0.5:
+			self.popupError("atypical amplitude contrast value %.3f"%(ampcon))
+			return False
+
+		return True
+
+	#--------------------
 	def quit(self, event):  # wxGlade: MyFrame.<event_handler>
 		wx.Exit()
 		event.Skip()
