@@ -9,6 +9,7 @@ import wx
 import numpy
 from PIL import Image
 from pyami import mrc
+from pyami import imagefun
 from pyami.Entry import FloatEntry
 from appionlib.apCtf import ctfdisplay
 

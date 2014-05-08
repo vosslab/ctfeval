@@ -13,6 +13,7 @@ from appionlib import apDisplay
 #from appionlib import lowess
 from appionlib.apImage import imagefile
 from appionlib.apImage import imagefilter
+from appionlib.apImage import imagestat
 from matplotlib import use
 use('Agg')
 from matplotlib import pyplot
@@ -32,7 +33,7 @@ class CtfDisplay(object):
 	def __init__(self):
 		### global params that do NOT change with image
 		self.ringwidth = 1.0
-		self.debug = True
+		self.debug = False
 		return
 
 	#====================
@@ -83,6 +84,7 @@ class CtfDisplay(object):
 		### do the elliptical average
 		if self.ellipratio is None:
 			return None
+		imagestat.printImageInfo(zdata2d)
 		pixelrdata, rotdata = ctftools.ellipticalAverage(zdata2d, self.ellipratio, self.angle,
 			self.ringwidth, firstpeak, full=False)
 		raddata = pixelrdata*self.trimfreq
@@ -991,6 +993,7 @@ class CtfDisplay(object):
 
 		apDisplay.printMsg("Reading image...")
 		image = imgdata['image']
+		imagestat.printImageInfo(image)
 		self.initfreq = 1./(self.apix * image.shape[0])
 		self.origimageshape = image.shape
 
@@ -1007,8 +1010,12 @@ class CtfDisplay(object):
 			self.trimfreq = fftfreq
 		else:
 			powerspec, self.trimfreq = ctftools.powerSpectraToOuterResolution(image, 
-				outerbound*1e10, self.apix)
+				outerbound, self.apix)
 		self.trimapix = 1.0/(self.trimfreq * powerspec.shape[0])
+
+		imagestat.printImageInfo(powerspec)
+		if max(powerspec.shape) < 33:
+			apDisplay.printError("Something went wrong the fft image is too small")
 
 		#print "Median filter image..."
 		#powerspec = ndimage.median_filter(powerspec, 2)
