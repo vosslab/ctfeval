@@ -20,7 +20,7 @@ from appionlib.apImage import imagefilter
 debug = False
 
 #===================
-def getCtfExtrema(focus=1.0e-6, mfreq=1.498e-04, cs=2e-2, 
+def getCtfExtrema(focus=1.0e-6, mfreq=4.498e6, cs=2e-3, 
 		volts=120000, ampconst=0.000, numzeros=3, zerotype="peaks"):
 	"""
 	mfreq - frequency in inverse meters = 1.0/(mpix * numcols)
