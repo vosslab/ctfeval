@@ -37,31 +37,32 @@ class MyFrame(wx.Frame):
 		self.fullimagepath = None
 		kwds["style"] = wx.DEFAULT_FRAME_STYLE
 		wx.Frame.__init__(self, *args, **kwds)
-		self.Logo = wx.StaticBitmap(self, wx.ID_ANY, wx.Bitmap("images/ctfeval_logo.png", wx.BITMAP_TYPE_ANY))
-		self.static_line_1a = wx.StaticLine(self, wx.ID_ANY)
-		self.static_line_1b = wx.StaticLine(self, wx.ID_ANY)
-		self.openFileButton = wx.Button(self, wx.ID_ANY, "Select Micrograph...")
-		self.imageLabel = wx.StaticText(self, wx.ID_ANY, "<- click button to select micrograph")
-		self.static_line_2a = wx.StaticLine(self, wx.ID_ANY)
-		self.static_line_2b = wx.StaticLine(self, wx.ID_ANY)
-		self.voltLabel = wx.StaticText(self, wx.ID_ANY, "Voltage Potential (kV)")
-		self.voltValue = FloatEntry(self, wx.ID_ANY, allownone=True, chars=8, value="", style=wx.TE_RIGHT)
-		self.csLabel = wx.StaticText(self, wx.ID_ANY, "Spherical Abberation, Cs (mm)")
-		self.csValue = FloatEntry(self, wx.ID_ANY, allownone=True, chars=8, value="", style=wx.TE_RIGHT)
-		self.pixelSizeLabel = wx.StaticText(self, wx.ID_ANY, "Pixel size (Angstroms, A)")
-		self.pixelSizeValue = FloatEntry(self, wx.ID_ANY, allownone=True, chars=8, value="", style=wx.TE_RIGHT)
-		self.static_line_3a = wx.StaticLine(self, wx.ID_ANY)
-		self.static_line_3b = wx.StaticLine(self, wx.ID_ANY)
-		self.defoc1Label = wx.StaticText(self, wx.ID_ANY, "Defocus 1 (microns, um)")
-		self.defoc1Value = FloatEntry(self, wx.ID_ANY, allownone=True, chars=8, value="", style=wx.TE_RIGHT)
-		self.defoc2Label = wx.StaticText(self, wx.ID_ANY, "Defocus 2 (microns, um)")
-		self.defoc2Value = FloatEntry(self, wx.ID_ANY, allownone=True, chars=8, value="", style=wx.TE_RIGHT)
-		self.angleLabel = wx.StaticText(self, wx.ID_ANY, "Angle Astimatism (degrees)")
-		self.angleValue = FloatEntry(self, wx.ID_ANY, allownone=True, chars=8, value="", style=wx.TE_RIGHT)
-		self.ampConLabel = wx.StaticText(self, wx.ID_ANY, "Amplitude Contrast (0..1)")
-		self.ampConValue = FloatEntry(self, wx.ID_ANY, allownone=True, chars=8, value="", style=wx.TE_RIGHT)
-		self.processButton = wx.Button(self, wx.ID_ANY, "Process CTF...")
-		self.quitButton = wx.Button(self, wx.ID_EXIT, "Quit")
+		self.panel = wx.Panel(self, wx.ID_ANY)
+		self.Logo = wx.StaticBitmap(self.panel, wx.ID_ANY, wx.Bitmap("images/ctfeval_logo.png", wx.BITMAP_TYPE_ANY))
+		self.static_line_1a = wx.StaticLine(self.panel, wx.ID_ANY)
+		self.static_line_1b = wx.StaticLine(self.panel, wx.ID_ANY)
+		self.openFileButton = wx.Button(self.panel, wx.ID_ANY, "Select Micrograph...")
+		self.imageLabel = wx.StaticText(self.panel, wx.ID_ANY, "<- click button to select micrograph")
+		self.static_line_2a = wx.StaticLine(self.panel, wx.ID_ANY)
+		self.static_line_2b = wx.StaticLine(self.panel, wx.ID_ANY)
+		self.voltLabel = wx.StaticText(self.panel, wx.ID_ANY, "Voltage Potential (kV)")
+		self.voltValue = FloatEntry(self.panel, wx.ID_ANY, allownone=True, chars=8, value="", style=wx.TE_RIGHT)
+		self.csLabel = wx.StaticText(self.panel, wx.ID_ANY, "Spherical Abberation, Cs (mm)")
+		self.csValue = FloatEntry(self.panel, wx.ID_ANY, allownone=True, chars=8, value="", style=wx.TE_RIGHT)
+		self.pixelSizeLabel = wx.StaticText(self.panel, wx.ID_ANY, "Pixel size (Angstroms, A)")
+		self.pixelSizeValue = FloatEntry(self.panel, wx.ID_ANY, allownone=True, chars=8, value="", style=wx.TE_RIGHT)
+		self.static_line_3a = wx.StaticLine(self.panel, wx.ID_ANY)
+		self.static_line_3b = wx.StaticLine(self.panel, wx.ID_ANY)
+		self.defoc1Label = wx.StaticText(self.panel, wx.ID_ANY, "Defocus 1 (microns, um)")
+		self.defoc1Value = FloatEntry(self.panel, wx.ID_ANY, allownone=True, chars=8, value="", style=wx.TE_RIGHT)
+		self.defoc2Label = wx.StaticText(self.panel, wx.ID_ANY, "Defocus 2 (microns, um)")
+		self.defoc2Value = FloatEntry(self.panel, wx.ID_ANY, allownone=True, chars=8, value="", style=wx.TE_RIGHT)
+		self.angleLabel = wx.StaticText(self.panel, wx.ID_ANY, "Angle Astimatism (degrees)")
+		self.angleValue = FloatEntry(self.panel, wx.ID_ANY, allownone=True, chars=8, value="", style=wx.TE_RIGHT)
+		self.ampConLabel = wx.StaticText(self.panel, wx.ID_ANY, "Amplitude Contrast (0..1)")
+		self.ampConValue = FloatEntry(self.panel, wx.ID_ANY, allownone=True, chars=8, value="", style=wx.TE_RIGHT)
+		self.processButton = wx.Button(self.panel, wx.ID_ANY, "Process CTF...")
+		self.quitButton = wx.Button(self.panel, wx.ID_EXIT, "Quit")
 		self.__set_properties()
 		self.__do_layout()
 
@@ -80,7 +81,14 @@ class MyFrame(wx.Frame):
 	#--------------------
 	def __do_layout(self):
 		# begin wxGlade: MyFrame.__do_layout
-		MainSizer = wx.FlexGridSizer(2, 3, 10, 10)
+
+		FrameSizer = wx.BoxSizer(wx.VERTICAL) # = sizer_1
+		MainSizer = wx.FlexGridSizer(2, 3, 10, 10) # = grid_sizer_1
+
+		self.Layout()
+
+
+
 		Input = wx.FlexGridSizer(11, 2, 5, 15)
 		MainSizer.Add(self.Logo, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALIGN_CENTER_VERTICAL | wx.ADJUST_MINSIZE, 0)
 		Input.Add(self.static_line_1a, 0, wx.EXPAND, 0)
@@ -118,11 +126,14 @@ class MyFrame(wx.Frame):
 		self.statbar = self.CreateStatusBar()
 		self.statbar.PushStatusText("Ready", 0)
 
-		self.SetSizer(MainSizer)
+		self.panel.SetSizer(MainSizer)
+		FrameSizer.Add(self.panel, 1, wx.EXPAND, 0)
 		MainSizer.Fit(self)
 		MainSizer.AddGrowableRow(0)
 		MainSizer.AddGrowableRow(1)
 		MainSizer.AddGrowableCol(1)
+		self.SetSizer(FrameSizer)
+		FrameSizer.Fit(self)
 		self.Layout()
 		# end wxGlade
 
