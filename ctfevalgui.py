@@ -119,7 +119,7 @@ class MyFrame(wx.Frame):
 	def __set_properties(self):
 		# begin wxGlade: MyFrame.__set_properties
 		self.SetTitle("MyFrame")
-		self.processButton.SetFont(wx.Font(16, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, "Cantarell"))
+		self.processButton.SetFont(wx.Font(16, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0))
 		# end wxGlade
 
 	#--------------------
@@ -167,6 +167,8 @@ class MyFrame(wx.Frame):
 
 		self.statbar = self.CreateStatusBar()
 		self.statbar.PushStatusText("Ready: "+os.getcwd(), 0)
+		self.statbar.SetFont(wx.Font(16, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0))
+
 
 		self.panel.SetSizer(MainSizer)
 		FrameSizer.Add(self.panel, 1, wx.EXPAND, 0)
@@ -194,7 +196,7 @@ class MyFrame(wx.Frame):
 				self.imageLabel.SetLabel(dlg.GetFilename())
 				self.statbar.PushStatusText(self.fullimagepath, 0)
 			
-			self.processButton.SetBackgroundColour(wx.Colour(255, 198, 191))
+			self.processButton.SetBackgroundColour(wx.Colour(191, 255, 191))
 		dlg.Destroy()
 		event.Skip()
 
@@ -253,6 +255,10 @@ class MyFrame(wx.Frame):
 		if self.checkCTFvalues() is False:
 			event.Skip()
 			return
+		self.statbar.PushStatusText("Processing please wait...", 0)
+		self.processButton.SetBackgroundColour(wx.Colour(255, 191, 191))
+		self.Update()
+		#self.statbar.SetBackgroundColour(wx.Colour(255, 191, 191))
 		imgdata = {
 			'filename': self.fullimagepath,
 			'image': mrc.read(self.fullimagepath),
@@ -268,7 +274,10 @@ class MyFrame(wx.Frame):
 		}
 		a = ctfdisplay.CtfDisplay()
 		ctfdisplaydict = a.CTFpowerspec(imgdata, ctfdata, None, None, True)
-
+		self.statbar.PushStatusText("Finished", 0)
+		self.processButton.SetBackgroundColour(wx.Colour(191, 255, 191))
+		self.Update()
+		
 		self.showImages(ctfdisplaydict)
 
 		event.Skip()

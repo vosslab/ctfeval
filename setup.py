@@ -11,7 +11,9 @@ APP = ['ctfevalgui.py']
 DATA_FILES = ['images/ctfeval_logo.png', ]
 PACKAGES = ['py2app','numpy','PIL','scipy','matplotlib']
 OPTIONS = {
-  'argv_emulation': True, 
+#  'arch': 'i386',
+  'argv_emulation': False, 
+  'site_packages': True,
   'iconfile': 'images/ctfeval_logo.icns', 
   'plist': {'CFBundleShortVersionString':'0.1.0',},
 }
