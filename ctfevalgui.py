@@ -39,7 +39,11 @@ class MyFrame(wx.Frame):
 		kwds["style"] = wx.DEFAULT_FRAME_STYLE
 		wx.Frame.__init__(self, *args, **kwds)
 		self.panel = wx.Panel(self, wx.ID_ANY)
-		self.Logo = wx.StaticBitmap(self.panel, wx.ID_ANY, wx.Bitmap("images/ctfeval_logo.png", wx.BITMAP_TYPE_ANY))
+		
+		logofile = "images/ctfeval_logo.png"
+		if not os.path.isfile(logofile):
+			logofile = "ctfeval_logo.png"
+		self.Logo = wx.StaticBitmap(self.panel, wx.ID_ANY, wx.Bitmap(logofile, wx.BITMAP_TYPE_ANY))
 		self.static_line_1a = wx.StaticLine(self.panel, wx.ID_ANY)
 		self.static_line_1b = wx.StaticLine(self.panel, wx.ID_ANY)
 		self.openFileButton = wx.Button(self.panel, wx.ID_ANY, "Select Micrograph...")
@@ -88,8 +92,6 @@ class MyFrame(wx.Frame):
 
 		self.Layout()
 
-
-
 		Input = wx.FlexGridSizer(11, 2, 5, 15)
 		MainSizer.Add(self.Logo, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALIGN_CENTER_VERTICAL | wx.ADJUST_MINSIZE, 0)
 		Input.Add(self.static_line_1a, 0, wx.EXPAND, 0)
@@ -125,7 +127,7 @@ class MyFrame(wx.Frame):
 		MainSizer.Add((10, 10), 0, wx.EXPAND | wx.ADJUST_MINSIZE, 0)
 
 		self.statbar = self.CreateStatusBar()
-		self.statbar.PushStatusText("Ready", 0)
+		self.statbar.PushStatusText("Ready: "+os.getcwd(), 0)
 
 		self.panel.SetSizer(MainSizer)
 		FrameSizer.Add(self.panel, 1, wx.EXPAND, 0)
@@ -146,6 +148,7 @@ class MyFrame(wx.Frame):
 		if dlg.ShowModal() == wx.ID_OK:
 			self.data['outfile'] = dlg.GetFilename()
 			self.data['dirname']  = os.path.abspath(dlg.GetDirectory())
+			os.chdir(self.data['dirname'])
 			self.fullimagepath = os.path.join(self.data['dirname'], self.data['outfile'])
 			if (dlg.GetFilterIndex() == 0):
 				self.processMrc(self.fullimagepath)
