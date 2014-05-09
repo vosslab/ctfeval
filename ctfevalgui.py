@@ -31,6 +31,45 @@ imagetypefilter = (
 	"JPEG Files (*.jpg)|*.jpg"
 	)
 
+
+class PopUpDialog(wx.Frame):
+	def __init__(self, imagefile, *args, **kwds):
+		wx.Frame.__init__(self, None, title="Popup Frame", size=(600,600))
+		# begin wxGlade: PopupDialog.__init__
+		kwds["style"] = wx.TAB_TRAVERSAL
+		panel = wx.Panel(self, *args, **kwds)
+
+		#bitmap = wx.Bitmap(imagefile, wx.BITMAP_TYPE_ANY)
+		image = wx.Image(imagefile, wx.BITMAP_TYPE_ANY)
+		xscale = 800./image.GetWidth()
+		yscale = 800./image.GetHeight()
+		scale = max(xscale,yscale)
+		width = int(round(image.GetWidth()*scale))
+		height = int(round(image.GetHeight()*scale))
+		bitmap = wx.BitmapFromImage(image.Scale(width, height))
+		self.Image = wx.StaticBitmap(self, wx.ID_ANY, bitmap)
+
+		self.__set_properties()
+		self.__do_layout()
+		# end wxGlade
+
+	def __set_properties(self):
+		# begin wxGlade: PopupDialog.__set_properties
+		pass
+		# end wxGlade
+
+	def __do_layout(self):
+		# begin wxGlade: PopupDialog.__do_layout
+		PopUpSize = wx.FlexGridSizer(wx.HORIZONTAL)
+		PopUpSize.Add(self.Image, 0, wx.EXPAND | wx.ALIGN_CENTER_HORIZONTAL | wx.ALIGN_CENTER_VERTICAL, 0)
+		PopUpSize.AddGrowableRow(0)
+		PopUpSize.AddGrowableCol(0)
+		self.SetSizer(PopUpSize)
+		PopUpSize.Fit(self)
+		# end wxGlade
+
+# end of class PopupDialog
+
 class MyFrame(wx.Frame):
 	#--------------------
 	def __init__(self, *args, **kwds):
@@ -166,7 +205,7 @@ class MyFrame(wx.Frame):
 			self.statbar.PushStatusText("ERROR: could not read file %s"%(mrcfile), 0)
 		header = mrc.read_file_header(mrcfile)
 		pixelsize = header['xlen']/float(header['nx'])
-		print "'%s', %.3f"%(self.pixelSizeValue.GetValue(), pixelsize)
+		#print "'%s', %.3f"%(self.pixelSizeValue.GetValue(), pixelsize)
 		if self.pixelSizeValue.GetValue() is None:
 			self.pixelSizeValue.SetValue(pixelsize)
 		#mrc.printHeader(header)
@@ -214,8 +253,6 @@ class MyFrame(wx.Frame):
 		if self.checkCTFvalues() is False:
 			event.Skip()
 			return
-		print "Event handler 'processCTF' not implemented!"
-
 		imgdata = {
 			'filename': self.fullimagepath,
 			'image': mrc.read(self.fullimagepath),
@@ -231,8 +268,19 @@ class MyFrame(wx.Frame):
 		}
 		a = ctfdisplay.CtfDisplay()
 		ctfdisplaydict = a.CTFpowerspec(imgdata, ctfdata, None, None, True)
+
+		self.showImages(ctfdisplaydict)
+
 		event.Skip()
 		#return ctfdisplaydict
+
+	#--------------------
+	def showImages(self, ctfdisplaydict):
+		print ctfdisplaydict
+		a = PopUpDialog(ctfdisplaydict['powerspecfile'])
+		a.Show()
+		b = PopUpDialog(ctfdisplaydict['plotsfile'])
+		b.Show()
 
 	#--------------------
 	def popupError(self, msg):
